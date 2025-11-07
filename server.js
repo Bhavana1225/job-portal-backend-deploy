@@ -16,13 +16,12 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// ✅ updated CORS setup
+// ✅ CORS for local frontend ONLY
 app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "http://localhost:5174",
-      "https://your-frontend-domain.com",
+      "http://localhost:5174"
     ],
     credentials: true,
   })
