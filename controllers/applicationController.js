@@ -1,80 +1,77 @@
-const Application = require("../models/application");
-const Job = require("../models/jobModel");
+const Application = require("../models/Application");
 
-// Apply for a job
-const applyJob = async (req, res) => {
-  try {
-    const jobId = req.params.jobId;
-    const { name, email } = req.body;
-    const userId = req.user._id;
-
-    if (!jobId) return res.status(400).json({ message: "Job ID is required." });
-    if (!req.file) return res.status(400).json({ message: "Resume is required." });
-    if (!name || !email) return res.status(400).json({ message: "Name and email are required." });
-
-    const job = await Job.findById(jobId);
-    if (!job) return res.status(404).json({ message: "Job not found." });
-
-    const existingApp = await Application.findOne({ job: jobId, user: userId });
-    if (existingApp) return res.status(400).json({ message: "You have already applied for this job." });
-
-    const application = new Application({
-      job: jobId,
-      user: userId,
-      name,
-      email,
-      resume: req.file.filename,
-    });
-
-    await application.save();
-    res.status(201).json({ message: "Application submitted successfully", application });
-  } catch (error) {
-    console.error("Error in applyJob:", error);
-    res.status(500).json({ message: "Failed to apply for job", error: error.message });
-  }
-};
-
-// Get all applications of user
+// ✅ Get logged-in user's applications
 const getUserApplications = async (req, res) => {
   try {
     const applications = await Application.find({ user: req.user._id }).populate("job");
     res.status(200).json(applications);
-  } catch (error) {
-    res.status(500).json({ message: "Failed to fetch applications", error: error.message });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
-// Update application
+// ✅ Apply to job
+const applyJob = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const { name, email } = req.body;
+    const resume = req.file?.filename;
+
+    const application = await Application.create({
+      user: req.user._id,
+      job: jobId,
+      name,
+      email,
+      resume,
+    });
+
+    res.status(201).json({ application });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ✅ Update application
 const updateApplication = async (req, res) => {
   try {
     const { applicationId } = req.params;
-    const { name, email } = req.body;
+    const application = await Application.findById(applicationId);
 
-    const application = await Application.findOne({ _id: applicationId, user: req.user._id });
     if (!application) return res.status(404).json({ message: "Application not found" });
+    if (application.user.toString() !== req.user._id.toString())
+      return res.status(403).json({ message: "Unauthorized" });
 
-    if (name) application.name = name;
-    if (email) application.email = email;
+    if (req.body.name) application.name = req.body.name;
+    if (req.body.email) application.email = req.body.email;
     if (req.file) application.resume = req.file.filename;
 
     await application.save();
-    res.status(200).json({ message: "Application updated successfully", application });
-  } catch (error) {
-    res.status(500).json({ message: "Failed to update application", error: error.message });
+    res.status(200).json({ application });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
-// Delete application
+// ✅ Delete application
 const deleteApplication = async (req, res) => {
   try {
     const { applicationId } = req.params;
-    const application = await Application.findOneAndDelete({ _id: applicationId, user: req.user._id });
-    if (!application) return res.status(404).json({ message: "Application not found" });
+    const application = await Application.findById(applicationId);
 
+    if (!application) return res.status(404).json({ message: "Application not found" });
+    if (application.user.toString() !== req.user._id.toString())
+      return res.status(403).json({ message: "Unauthorized" });
+
+    await application.remove();
     res.status(200).json({ message: "Application deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Failed to delete application", error: error.message });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
-module.exports = { applyJob, getUserApplications, updateApplication, deleteApplication };
+module.exports = {
+  getUserApplications,
+  applyJob,
+  updateApplication,
+  deleteApplication,
+};
