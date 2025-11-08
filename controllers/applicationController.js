@@ -1,4 +1,4 @@
-const Application = require("../models/Application");
+const Application = require("../models/application");
 
 // ✅ Get logged-in user's applications
 const getUserApplications = async (req, res) => {
