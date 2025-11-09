@@ -15,7 +15,7 @@ const applyJob = async (req, res) => {
   try {
     const { jobId } = req.params;
     const { name, email } = req.body;
-    const resume = req.file?.filename;
+    const resume = req.file ? req.file.path : null;
 
     const application = await Application.create({
       user: req.user._id,
@@ -43,7 +43,7 @@ const updateApplication = async (req, res) => {
 
     if (req.body.name) application.name = req.body.name;
     if (req.body.email) application.email = req.body.email;
-    if (req.file) application.resume = req.file.filename;
+    if (req.file) application.resume = req.file.path;
 
     await application.save();
     res.status(200).json({ application });
