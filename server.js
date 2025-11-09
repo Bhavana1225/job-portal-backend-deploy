@@ -3,11 +3,11 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 require("dotenv").config();
 
-const authRoutes = require("./routes/authRoutes");
-
+// Routes
+const authRoutes = require("./routes/authRoutes.js");
 const userRoutes = require("./routes/userRoutes.js");
 const jobRoutes = require("./routes/jobRoutes.js");
-const applicationRoutes = require("./routes/applicationRoutes.js");
+const applicationRoutes = require("./routes/applicationroutes.js");
 
 const app = express();
 
@@ -34,7 +34,10 @@ app.use((req, res) => {
 // Error handler
 app.use((err, req, res, next) => {
   console.error("Backend Error:", err);
-  res.status(500).json({ message: "Internal Server Error", error: err.message });
+  res.status(500).json({
+    message: "Internal Server Error",
+    error: err.message
+  });
 });
 
 // MongoDB Connection
@@ -42,7 +45,7 @@ const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
 mongoose
-  .connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(MONGO_URI)
   .then(() => {
     console.log("✅ MongoDB connected");
     app.listen(PORT, () => {
