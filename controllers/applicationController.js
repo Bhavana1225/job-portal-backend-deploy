@@ -1,87 +1,83 @@
-const Application = require("../models/application");
+const Application = require("../models/Application");
+const Job = require("../models/Job");
 
-// ✅ Get logged-in user's applications
-const getUserApplications = async (req, res) => {
+exports.createApplication = async function (req, res) {
   try {
-    const applications = await Application.find({ user: req.user._id })
-      .populate("job");
-    res.status(200).json(applications);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
+    const job = await Job.findById(req.params.jobId);
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
 
-// ✅ Apply to job (Cloudinary resume upload)
-const applyJob = async (req, res) => {
-  try {
-    const { jobId } = req.params;
-    const { name, email } = req.body;
-
-    const resumeUrl = req.file ? req.file.path : null;
+    const resumeUrl = req.file ? req.file.path : "";
 
     const application = await Application.create({
-      user: req.user._id,
-      job: jobId,
-      name,
-      email,
+      job: req.params.jobId,
+      user: req.user.id,
+      name: req.body.name,
+      email: req.body.email,
       resume: resumeUrl
     });
 
-    res.status(201).json({ application });
+    res.status(201).json(application);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("Create application error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-// ✅ Update application
-const updateApplication = async (req, res) => {
+exports.getMyApplications = async function (req, res) {
   try {
-    const { applicationId } = req.params;
-    const application = await Application.findById(applicationId);
+    const applications = await Application.find({ user: req.user.id })
+      .populate("job")
+      .sort({ createdAt: -1 });
 
-    if (!application)
+    res.json(applications);
+  } catch (err) {
+    console.error("Fetch applications error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.updateApplication = async function (req, res) {
+  try {
+    const application = await Application.findOne({
+      _id: req.params.id,
+      user: req.user.id
+    });
+
+    if (!application) {
       return res.status(404).json({ message: "Application not found" });
+    }
 
-    if (application.user.toString() !== req.user._id.toString())
-      return res.status(403).json({ message: "Unauthorized" });
+    const resumeUrl = req.file ? req.file.path : application.resume;
 
     application.name = req.body.name || application.name;
     application.email = req.body.email || application.email;
-    if (req.file) {
-      application.resume = req.file.path; // ✅ Cloudinary full URL
-    }
+    application.resume = resumeUrl;
 
     await application.save();
 
-    res.status(200).json({ application });
+    res.json(application);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("Update app error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-// ✅ Delete application
-const deleteApplication = async (req, res) => {
+exports.deleteApplication = async function (req, res) {
   try {
-    const { applicationId } = req.params;
-    const application = await Application.findById(applicationId);
+    const application = await Application.findOneAndDelete({
+      _id: req.params.id,
+      user: req.user.id
+    });
 
-    if (!application)
+    if (!application) {
       return res.status(404).json({ message: "Application not found" });
+    }
 
-    if (application.user.toString() !== req.user._id.toString())
-      return res.status(403).json({ message: "Unauthorized" });
-
-    await application.remove();
-
-    res.status(200).json({ message: "Application deleted successfully" });
+    res.json({ message: "Application deleted successfully" });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("Delete app error:", err);
+    res.status(500).json({ message: "Server error" });
   }
-};
-
-module.exports = {
-  getUserApplications,
-  applyJob,
-  updateApplication,
-  deleteApplication
 };
