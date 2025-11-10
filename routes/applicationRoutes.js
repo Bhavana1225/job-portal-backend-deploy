@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const { protect } = require("../middleware/authmiddleware");
-const upload = require("../config/multer");
+const upload = require("../config/multer-cloudinary");
+
 
 const {
   createApplication,
