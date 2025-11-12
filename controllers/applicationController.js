@@ -1,6 +1,7 @@
 const Application = require("../models/application");
 const Job = require("../models/job");
 
+// Create Application
 exports.createApplication = async function (req, res) {
   try {
     const job = await Job.findById(req.params.jobId);
@@ -8,7 +9,11 @@ exports.createApplication = async function (req, res) {
       return res.status(404).json({ message: "Job not found" });
     }
 
-    const resumeUrl = req.file ? req.file.path : "";
+    // ✅ Generate full resume URL
+    let resumeUrl = "";
+    if (req.file) {
+      resumeUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+    }
 
     const application = await Application.create({
       job: req.params.jobId,
@@ -25,6 +30,7 @@ exports.createApplication = async function (req, res) {
   }
 };
 
+// Get My Applications
 exports.getMyApplications = async function (req, res) {
   try {
     const applications = await Application.find({ user: req.user.id })
@@ -38,6 +44,7 @@ exports.getMyApplications = async function (req, res) {
   }
 };
 
+// Update Application
 exports.updateApplication = async function (req, res) {
   try {
     const application = await Application.findOne({
@@ -49,7 +56,11 @@ exports.updateApplication = async function (req, res) {
       return res.status(404).json({ message: "Application not found" });
     }
 
-    const resumeUrl = req.file ? req.file.path : application.resume;
+    // ✅ If new resume uploaded, update URL; else keep old one
+    let resumeUrl = application.resume;
+    if (req.file) {
+      resumeUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+    }
 
     application.name = req.body.name || application.name;
     application.email = req.body.email || application.email;
@@ -64,6 +75,7 @@ exports.updateApplication = async function (req, res) {
   }
 };
 
+// Delete Application
 exports.deleteApplication = async function (req, res) {
   try {
     const application = await Application.findOneAndDelete({
