@@ -3,7 +3,6 @@ const router = express.Router();
 const { protect } = require("../middleware/authmiddleware");
 const upload = require("../config/multer-cloudinary");
 
-
 const {
   createApplication,
   getMyApplications,
@@ -13,11 +12,10 @@ const {
 
 router.post("/:jobId", protect, upload.single("resume"), createApplication);
 
-router.get("/me", protect, getMyApplications);
+router.get("/my", protect, getMyApplications); // ✅ changed from /me to /my
 
 router.put("/:id", protect, upload.single("resume"), updateApplication);
 
 router.delete("/:id", protect, deleteApplication);
 
 module.exports = router;
-
