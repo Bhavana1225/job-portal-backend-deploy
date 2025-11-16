@@ -12,7 +12,7 @@ const {
 
 router.post("/:jobId", protect, upload.single("resume"), createApplication);
 
-router.get("/my", protect, getMyApplications); // ✅ changed from /me to /my
+router.get("/me", protect, getMyApplications);
 
 router.put("/:id", protect, upload.single("resume"), updateApplication);
 

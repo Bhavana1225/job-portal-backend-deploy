@@ -1,95 +1,78 @@
-const Application = require("../models/application");
-const Job = require("../models/job");
+const Application = require("../models/applicationModel");
+const Job = require("../models/jobModel");
 
-// Create Application
-exports.createApplication = async function (req, res) {
+exports.createApplication = async (req, res) => {
   try {
-    const job = await Job.findById(req.params.jobId);
-    if (!job) {
-      return res.status(404).json({ message: "Job not found" });
+    const { name, email } = req.body;
+    const jobId = req.params.jobId;
+
+    if (!req.file) {
+      return res.status(400).json({ message: "Resume is required" });
     }
 
-    // ✅ Generate full resume URL
-    let resumeUrl = "";
-    if (req.file) {
-      resumeUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
-    }
+    const resumeUrl = req.file.path;
 
     const application = await Application.create({
-      job: req.params.jobId,
-      user: req.user.id,
-      name: req.body.name,
-      email: req.body.email,
-      resume: resumeUrl
+      job: jobId,
+      user: req.user._id,
+      name,
+      email,
+      resume: resumeUrl,
     });
 
     res.status(201).json(application);
-  } catch (err) {
-    console.error("Create application error:", err);
-    res.status(500).json({ message: "Server error" });
+  } catch (error) {
+    console.error("Create Application Error:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-// Get My Applications
-exports.getMyApplications = async function (req, res) {
-  try {
-    const applications = await Application.find({ user: req.user.id })
-      .populate("job")
-      .sort({ createdAt: -1 });
 
-    res.json(applications);
-  } catch (err) {
-    console.error("Fetch applications error:", err);
-    res.status(500).json({ message: "Server error" });
+exports.getMyApplications = async (req, res) => {
+  try {
+    const applications = await Application.find({ user: req.user._id })
+      .populate("job");
+
+    res.status(200).json(applications);
+  } catch (error) {
+    console.error("Get Applications Error:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-// Update Application
-exports.updateApplication = async function (req, res) {
+
+exports.updateApplication = async (req, res) => {
   try {
-    const application = await Application.findOne({
-      _id: req.params.id,
-      user: req.user.id
-    });
+    let updateData = {
+      name: req.body.name,
+      email: req.body.email,
+      status: req.body.status,
+    };
 
-    if (!application) {
-      return res.status(404).json({ message: "Application not found" });
-    }
-
-    // ✅ If new resume uploaded, update URL; else keep old one
-    let resumeUrl = application.resume;
     if (req.file) {
-      resumeUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+      updateData.resume = req.file.path;
     }
 
-    application.name = req.body.name || application.name;
-    application.email = req.body.email || application.email;
-    application.resume = resumeUrl;
+    const updated = await Application.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
 
-    await application.save();
-
-    res.json(application);
-  } catch (err) {
-    console.error("Update app error:", err);
-    res.status(500).json({ message: "Server error" });
+    res.status(200).json(updated);
+  } catch (error) {
+    console.error("Update Application Error:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-// Delete Application
-exports.deleteApplication = async function (req, res) {
+
+exports.deleteApplication = async (req, res) => {
   try {
-    const application = await Application.findOneAndDelete({
-      _id: req.params.id,
-      user: req.user.id
-    });
-
-    if (!application) {
-      return res.status(404).json({ message: "Application not found" });
-    }
-
-    res.json({ message: "Application deleted successfully" });
-  } catch (err) {
-    console.error("Delete app error:", err);
-    res.status(500).json({ message: "Server error" });
+    await Application.findByIdAndDelete(req.params.id);
+    res.json({ message: "Application deleted" });
+  } catch (error) {
+    console.error("Delete Application Error:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };

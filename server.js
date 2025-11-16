@@ -15,7 +15,6 @@ app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
-// ✅ Serve uploaded resumes
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api/auth", authRoutes);
@@ -42,9 +41,9 @@ const MONGO_URI = process.env.MONGO_URI;
 mongoose
   .connect(MONGO_URI)
   .then(() => {
-    console.log("✅ MongoDB connected");
-    app.listen(PORT, () => console.log(`✅ Server running on PORT ${PORT}`));
+    console.log("MongoDB connected");
+    app.listen(PORT, () => console.log(`Server running on PORT ${PORT}`));
   })
-  .catch((err) => console.error("❌ DB Connection Error:", err));
+  .catch((err) => console.error("DB Connection Error:", err));
 
 module.exports = app;
