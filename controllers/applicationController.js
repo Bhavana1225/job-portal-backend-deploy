@@ -10,7 +10,8 @@ exports.createApplication = async (req, res) => {
       return res.status(400).json({ message: "Resume is required" });
     }
 
-    const resumeUrl = req.file.path;
+    // ✅ Use Cloudinary URL if available
+    const resumeUrl = req.file?.path || req.file?.filename || req.file?.url;
 
     const application = await Application.create({
       job: jobId,
@@ -27,7 +28,6 @@ exports.createApplication = async (req, res) => {
   }
 };
 
-
 exports.getMyApplications = async (req, res) => {
   try {
     const applications = await Application.find({ user: req.user._id })
@@ -40,7 +40,6 @@ exports.getMyApplications = async (req, res) => {
   }
 };
 
-
 exports.updateApplication = async (req, res) => {
   try {
     let updateData = {
@@ -50,7 +49,8 @@ exports.updateApplication = async (req, res) => {
     };
 
     if (req.file) {
-      updateData.resume = req.file.path;
+      // ✅ Use Cloudinary URL if available
+      updateData.resume = req.file?.path || req.file?.filename || req.file?.url;
     }
 
     const updated = await Application.findByIdAndUpdate(
@@ -65,7 +65,6 @@ exports.updateApplication = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
 
 exports.deleteApplication = async (req, res) => {
   try {
