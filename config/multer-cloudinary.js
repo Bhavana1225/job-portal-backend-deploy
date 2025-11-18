@@ -4,9 +4,13 @@ const cloudinary = require("./cloudinary");
 
 const storage = new CloudinaryStorage({
   cloudinary,
-  params: {
-    folder: "job_portal_resumes",
-    resource_type: "raw"
+  params: async (req, file) => {
+    return {
+      folder: "job_portal_resumes",
+      resource_type: "raw",
+      public_id: Date.now() + "-" + file.originalname,   // ✅ IMPORTANT
+      format: file.originalname.split(".").pop(),        // ✅ Makes Cloudinary support pdf/doc/docx
+    };
   }
 });
 
