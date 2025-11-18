@@ -7,7 +7,7 @@ const storage = new CloudinaryStorage({
   params: async (req, file) => {
     return {
       folder: "job_portal_resumes",
-      resource_type: "raw",
+      resource_type: "auto",
       public_id: Date.now() + "-" + file.originalname,   // ✅ IMPORTANT
       format: file.originalname.split(".").pop(),        // ✅ Makes Cloudinary support pdf/doc/docx
     };
