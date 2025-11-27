@@ -10,8 +10,8 @@ exports.createApplication = async (req, res) => {
       return res.status(400).json({ message: "Resume is required" });
     }
 
-    // ✅ Cloudinary correct file URL
-    const resumeUrl = req.file.secure_url;
+    // FIX: Correct Cloudinary file path
+    const resumeUrl = req.file.path;
 
     const application = await Application.create({
       job: jobId,
@@ -49,8 +49,8 @@ exports.updateApplication = async (req, res) => {
     };
 
     if (req.file) {
-      // ✅ Cloudinary correct file URL
-      updateData.resume = req.file.secure_url;
+      // FIX: correct Cloudinary URL
+      updateData.resume = req.file.path;
     }
 
     const updated = await Application.findByIdAndUpdate(
