@@ -10,8 +10,8 @@ exports.createApplication = async (req, res) => {
       return res.status(400).json({ message: "Resume is required" });
     }
 
-    // FIX: Correct Cloudinary file path
-    const resumeUrl = req.file.path;
+    // ✅ Use Cloudinary secure URL for raw files
+    const resumeUrl = req.file.secure_url;
 
     const application = await Application.create({
       job: jobId,
@@ -30,9 +30,7 @@ exports.createApplication = async (req, res) => {
 
 exports.getMyApplications = async (req, res) => {
   try {
-    const applications = await Application.find({ user: req.user._id })
-      .populate("job");
-
+    const applications = await Application.find({ user: req.user._id }).populate("job");
     res.status(200).json(applications);
   } catch (error) {
     console.error("Get Applications Error:", error);
@@ -49,15 +47,10 @@ exports.updateApplication = async (req, res) => {
     };
 
     if (req.file) {
-      // FIX: correct Cloudinary URL
-      updateData.resume = req.file.path;
+      updateData.resume = req.file.secure_url; // ✅ Cloudinary URL
     }
 
-    const updated = await Application.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true }
-    );
+    const updated = await Application.findByIdAndUpdate(req.params.id, updateData, { new: true });
 
     res.status(200).json(updated);
   } catch (error) {
