@@ -96,19 +96,33 @@ exports.updateUserProfile = async function (req, res) {
   try {
     const userId = req.user.id;
 
-    const { name, email, contact, skills, experience, education } = req.body;
+    // Fetch the user first
+    const user = await User.findById(userId);
 
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { name, email, contact, skills, experience, education },
-      { new: true }
-    ).select("-password");
-
-    if (!updatedUser) {
+    if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.json(updatedUser);
+    // Update only fields sent in request
+    user.name = req.body.name || user.name;
+    user.email = req.body.email || user.email;
+    user.contact = req.body.contact || user.contact;
+    user.skills = req.body.skills || user.skills;
+    user.experience = req.body.experience || user.experience;
+    user.education = req.body.education || user.education;
+
+    const updatedUser = await user.save();
+
+    res.json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      contact: updatedUser.contact,
+      skills: updatedUser.skills,
+      experience: updatedUser.experience,
+      education: updatedUser.education
+    });
 
   } catch (err) {
     console.error("Profile update error:", err);
