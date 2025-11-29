@@ -3,6 +3,8 @@ const Job = require("../models/jobModel");
 
 exports.createApplication = async (req, res) => {
   try {
+    console.log("req.file:", req.file); // debug: check file upload
+
     const { name, email } = req.body;
     const jobId = req.params.jobId;
 
@@ -10,8 +12,8 @@ exports.createApplication = async (req, res) => {
       return res.status(400).json({ message: "Resume is required" });
     }
 
-    // ✅ Use Cloudinary secure URL for raw files
-    const resumeUrl = req.file.secure_url;
+    // Use correct Cloudinary URL
+    const resumeUrl = req.file.path || req.file.secure_url;
 
     const application = await Application.create({
       job: jobId,
@@ -47,11 +49,10 @@ exports.updateApplication = async (req, res) => {
     };
 
     if (req.file) {
-      updateData.resume = req.file.secure_url; // ✅ Cloudinary URL
+      updateData.resume = req.file.path || req.file.secure_url;
     }
 
     const updated = await Application.findByIdAndUpdate(req.params.id, updateData, { new: true });
-
     res.status(200).json(updated);
   } catch (error) {
     console.error("Update Application Error:", error);

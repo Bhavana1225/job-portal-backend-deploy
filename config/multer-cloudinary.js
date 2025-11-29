@@ -4,12 +4,12 @@ const cloudinary = require("./cloudinary");
 
 const storage = new CloudinaryStorage({
   cloudinary,
-  params: async (req, file) => ({
+  params: {
     folder: "job_portal_resumes",
-    resource_type: "raw",                      // ✅ for PDFs/DOCs
-    public_id: Date.now() + "-" + file.originalname,
-    format: file.originalname.split(".").pop(), // keeps original extension
-  }),
+    resource_type: "raw",            // 🔥 ensures PDF/DOC/DOCX are handled correctly
+    use_filename: true,
+    unique_filename: false,
+  },
 });
 
 const upload = multer({ storage });
